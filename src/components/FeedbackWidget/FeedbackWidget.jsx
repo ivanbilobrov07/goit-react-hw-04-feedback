@@ -1,69 +1,68 @@
-import { Component } from 'react';
 import PropTypes from 'prop-types';
 
+import { useFeedback } from 'hooks';
 import { Section } from 'components/Section';
 import { FeedbackOptions } from 'components/FeedbackOptions';
 import { Statistic } from 'components/Statistics';
 
-export class FeedbackWidget extends Component {
-  state = {
-    good: 0,
-    neutral: 0,
-    bad: 0,
+export const FeedbackWidget = ({
+  title,
+  positiveText,
+  negativeText,
+  neutralText,
+}) => {
+  const [badFbk, setBadFdk] = useFeedback(0);
+  const [neutralFbk, setNeutralFdk] = useFeedback(0);
+  const [goodFbk, setGoodFdk] = useFeedback(0);
+
+  const total = badFbk + neutralFbk + goodFbk;
+
+  const handleFeedbackClick = ({ target: { name } }) => {
+    switch (name) {
+      case 'bad':
+        setBadFdk();
+        break;
+      case 'neutral':
+        setNeutralFdk();
+        break;
+      case 'good':
+        setGoodFdk();
+        break;
+      default:
+        return;
+    }
   };
 
-  handleFeedbackClick = ({ target: { name } }) => {
-    this.setState(prevState => ({
-      ...prevState,
-      [name]: prevState[name] + 1,
-    }));
+  const countPositiveFeedbackPercentage = () => {
+    return Math.floor((goodFbk / total) * 100);
   };
 
-  countTotalFeedback = () => {
-    const { good, bad, neutral } = this.state;
+  return (
+    <>
+      <Section title={title}>
+        <FeedbackOptions
+          optionsText={{ positiveText, negativeText, neutralText }}
+          onLeaveFeedback={handleFeedbackClick}
+        />
+      </Section>
 
-    return good + bad + neutral;
-  };
-
-  countPositiveFeedbackPercentage = () => {
-    const total = this.countTotalFeedback();
-
-    return Math.floor((this.state.good / total) * 100);
-  };
-
-  render() {
-    const { title, positiveText, negativeText, neutralText } = this.props;
-    const { good, bad, neutral } = this.state;
-    const total = this.countTotalFeedback();
-    const positivePercentage = this.countPositiveFeedbackPercentage();
-
-    return (
-      <>
-        <Section title={title}>
-          <FeedbackOptions
-            optionsText={{ positiveText, negativeText, neutralText }}
-            onLeaveFeedback={this.handleFeedbackClick}
-          />
-        </Section>
-
-        <Section title="Statistics">
-          <Statistic
-            good={good}
-            neutral={neutral}
-            bad={bad}
-            optionsText={{ positiveText, negativeText, neutralText }}
-            total={total}
-            positivePercentage={positivePercentage}
-          />
-        </Section>
-      </>
-    );
-  }
-}
+      <Section title="Statistics">
+        <Statistic
+          good={goodFbk}
+          neutral={neutralFbk}
+          bad={badFbk}
+          optionsText={{ positiveText, negativeText, neutralText }}
+          total={total}
+          positivePercentage={countPositiveFeedbackPercentage()}
+        />
+      </Section>
+    </>
+  );
+};
 
 FeedbackWidget.propTypes = {
   title: PropTypes.string.isRequired,
   positiveText: PropTypes.string.isRequired,
   negativeText: PropTypes.string.isRequired,
   neutralText: PropTypes.string.isRequired,
-}
+};
